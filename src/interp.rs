@@ -1,33 +1,22 @@
 use crate::common::*;
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
-│ Interpreter                                                              ─╬─│┼
+│ Interpreter                                                               ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
-#[derive(Default, Debug)]
+#[derive(Debug, Default)]
 pub struct Interp {
-  pub stack: Stack,
-  pub tokens: Vec<String>,
+  stack:  Stack,
+  tokens: Vec<String>,
 }
 
 impl Interp {
   pub fn new() -> Self {
-    Interp::default()
+    Self::default()
   }
 
   pub fn parse(&mut self, input: String) {
     self.tokens = input.split_whitespace().map(|s| s.to_string()).collect();
-  }
-
-  pub fn contents(&mut self) -> String {
-    self
-      .stack
-      .contents()
-      .into_iter()
-      .map(|v| v.to_string())
-      .collect::<Vec<String>>()
-      .join(" ")
-      + " <- Top"
   }
 
   pub fn exec(&mut self) -> Result<(), Error> {
@@ -46,31 +35,50 @@ impl Interp {
         continue;
       }
 
+      let mut op = Op::new(&mut self.stack);
+
       match token.as_str() {
-        "+" => self.stack.add()?,
-        "-" => self.stack.sub()?,
-        "*" => self.stack.mul()?,
+        "+" => op.add()?,
+        "-" => op.sub()?,
+        "*" => op.mul()?,
+        "=" => op.eq()?,
+        ">" => op.gt()?,
+        "<" => op.lt()?,
         "." => {
           let val = match self.stack.pop() {
             Ok(v) => v,
-            Err(_) => panic!("err"),
+            Err(_) => Err(Error::StackUnderflow)?,
           };
           println!("{} ok", val);
-        }
-        "=" => self.stack.eq()?,
-        ">" => self.stack.gt()?,
-        "<" => self.stack.lt()?,
+        },
         "emit" => {
-          let val = match self.stack.emit() {
+          let val = match self.stack.pop() {
             Ok(v) => v,
-            Err(_) => panic!("err"),
+            Err(_) => Err(Error::StackUnderflow)?,
           };
-          println!("{} ok", val);
-        }
-        _ => panic!("Invalid operation!"),
+
+          let ch = match u32::try_from(val) {
+            Ok(v) => char::from_u32(v).unwrap(),
+            Err(_) => '',
+          };
+
+          println!("{} ok", ch);
+        },
+        _ => Err(Error::NotFound)?,
       }
     }
     Ok(())
+  }
+
+  pub fn contents(&mut self) -> String {
+    self
+      .stack
+      .contents()
+      .into_iter()
+      .map(|v| v.to_string())
+      .collect::<Vec<String>>()
+      .join(" ")
+      + " <- Top"
   }
 }
 

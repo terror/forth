@@ -3,7 +3,9 @@ use crate::common::*;
 mod common;
 mod error;
 mod interp;
+mod op;
 mod stack;
+mod types;
 
 #[derive(StructOpt, Debug)]
 #[structopt(name = "forth")]
@@ -14,7 +16,7 @@ struct Opt {
 }
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
-│ ⠉⠕⠕⠇ 4 ⠉⠕⠕⠇                                                              ─╬─│┼
+│ ⠉⠕⠕⠇ 4 ⠉⠕⠕⠇                                                               ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
 fn main() {
@@ -22,14 +24,17 @@ fn main() {
     println!("Input! {}", input.display());
   } else {
     println!("⠉⠕⠕⠇ 4 ⠉⠕⠕⠇");
+
     let mut interp = Interp::new();
+
     loop {
-      println!("{}", interp.contents());
-      print!("> ");
+      print!("{}\n> ", interp.contents());
 
       let mut i = String::new();
-      stdout().flush().unwrap();
-      stdin().read_line(&mut i).unwrap();
+      stdout().flush().expect("Coult not flush stdout.");
+      stdin()
+        .read_line(&mut i)
+        .expect("Could not read from stdin.");
 
       interp.parse(i);
       match interp.exec() {

@@ -9,3 +9,6 @@ fmt:
 
 check:
  cargo check
+
+watch +COMMAND='test':
+	cargo watch --clear --exec "{{COMMAND}}"

@@ -1,7 +1,7 @@
 use crate::common::*;
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
-│ Stack                                                                    ─╬─│┼
+│ Stack                                                                     ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
 #[derive(Default, Debug)]
@@ -27,6 +27,10 @@ impl Stack {
     }
   }
 
+  pub fn contents(&mut self) -> &Vec<i64> {
+    &self.v
+  }
+
   #[cfg(test)]
   pub fn peek(&mut self) -> i64 {
     if self.is_empty() {
@@ -43,81 +47,6 @@ impl Stack {
   #[cfg(test)]
   pub fn size(&mut self) -> i64 {
     self.v.len() as i64
-  }
-
-  pub fn contents(&mut self) -> &Vec<i64> {
-    &self.v
-  }
-
-  pub fn add(&mut self) -> Result<(), Error> {
-    let first = self.pop()?;
-    let second = self.pop()?;
-    self.push(first + second);
-    Ok(())
-  }
-
-  pub fn sub(&mut self) -> Result<(), Error> {
-    let first = self.pop()?;
-    let second = self.pop()?;
-    self.push(first - second);
-    Ok(())
-  }
-
-  pub fn mul(&mut self) -> Result<(), Error> {
-    let first = self.pop()?;
-    let second = self.pop()?;
-    self.push(first * second);
-    Ok(())
-  }
-
-  pub fn eq(&mut self) -> Result<(), Error> {
-    let first = self.pop()?;
-    let second = self.pop()?;
-
-    let ret = match first == second {
-      true => -1,
-      false => 0,
-    };
-
-    self.push(ret);
-    Ok(())
-  }
-
-  pub fn gt(&mut self) -> Result<(), Error> {
-    let first = self.pop()?;
-    let second = self.pop()?;
-
-    let ret = match first < second {
-      true => -1,
-      false => 0,
-    };
-
-    self.push(ret);
-    Ok(())
-  }
-
-  pub fn lt(&mut self) -> Result<(), Error> {
-    let first = self.pop()?;
-    let second = self.pop()?;
-
-    let ret = match first > second {
-      true => -1,
-      false => 0,
-    };
-
-    self.push(ret);
-    Ok(())
-  }
-
-  pub fn emit(&mut self) -> Result<char, Error> {
-    let val = self.pop()?;
-
-    let ret = match u32::try_from(val) {
-      Ok(v) => char::from_u32(v).unwrap(),
-      Err(_) => '',
-    };
-
-    Ok(ret)
   }
 }
 
