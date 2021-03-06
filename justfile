@@ -6,3 +6,6 @@ test:
 
 fmt:
 	cargo +nightly fmt
+
+check:
+ cargo check
