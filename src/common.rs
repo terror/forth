@@ -9,6 +9,4 @@ pub(crate) use std::{
 pub(crate) use snafu::Snafu;
 pub(crate) use structopt::StructOpt;
 
-pub(crate) use crate::{
-  error::Error, interp::Interp, op::Op, stack::Stack, types::BinaryOperation,
-};
+pub(crate) use crate::{error::Error, interpreter::Interpreter, op::Op, stack::Stack};

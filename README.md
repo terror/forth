@@ -1,3 +1,3 @@
-## 4
+## forth
 
-`⠉⠕⠕⠇ a forth interpreter in rust ⠉⠕⠕⠇`
+`⠉⠕⠕⠇ a forth interpreter ⠉⠕⠕⠇`

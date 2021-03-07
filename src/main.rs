@@ -2,10 +2,9 @@ use crate::common::*;
 
 mod common;
 mod error;
-mod interp;
+mod interpreter;
 mod op;
 mod stack;
-mod types;
 
 #[derive(StructOpt, Debug)]
 #[structopt(name = "forth")]
@@ -16,7 +15,7 @@ struct Opt {
 }
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
-│ ⠉⠕⠕⠇ 4 ⠉⠕⠕⠇                                                               ─╬─│┼
+│ ⠉⠕⠕⠇ 4 ⠉⠕⠕⠇                                                              ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
 fn main() {
@@ -25,10 +24,10 @@ fn main() {
   } else {
     println!("⠉⠕⠕⠇ 4 ⠉⠕⠕⠇");
 
-    let mut interp = Interp::new();
+    let mut interpreter = Interpreter::new();
 
     loop {
-      print!("{}\n> ", interp.contents());
+      print!("{}\n> ", interpreter.contents());
 
       let mut i = String::new();
       stdout().flush().expect("Coult not flush stdout.");
@@ -36,9 +35,9 @@ fn main() {
         .read_line(&mut i)
         .expect("Could not read from stdin.");
 
-      interp.parse(i);
-      match interp.exec() {
-        Ok(_) => {},
+      interpreter.parse(i);
+      match interpreter.exec() {
+        Ok(_) => {}
         Err(e) => println!("{}", e),
       };
     }
