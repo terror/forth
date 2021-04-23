@@ -5,6 +5,7 @@ mod error;
 mod interpreter;
 mod op;
 mod stack;
+mod utils;
 
 #[derive(StructOpt, Debug)]
 #[structopt(name = "forth")]
@@ -15,14 +16,14 @@ struct Opt {
 }
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
-│ ⠉⠕⠕⠇ 4 ⠉⠕⠕⠇                                                              ─╬─│┼
+│ ⠉⠕⠕⠇ Forth ⠉⠕⠕⠇                                                          ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
 fn main() {
   if let Some(input) = Opt::from_args().input {
     println!("Input! {}", input.display());
   } else {
-    println!("⠉⠕⠕⠇ 4 ⠉⠕⠕⠇");
+    println!("⠉⠕⠕⠇ Forth ⠉⠕⠕⠇");
 
     let mut interpreter = Interpreter::new();
 

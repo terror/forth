@@ -4,12 +4,14 @@ use crate::common::*;
 │ Operation Types                                                          ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
-enum UnaryOperation {
+pub enum UnaryOperation {
   Drop,
   Dup,
+  Emit,
+  Dot,
+  Cr,
 }
-
-enum BinaryOperation {
+pub enum BinaryOperation {
   Add,
   Sub,
   Mul,
@@ -19,8 +21,7 @@ enum BinaryOperation {
   Swap,
   Over,
 }
-
-enum TernaryOperation {
+pub enum TernaryOperation {
   Rot,
 }
 
@@ -38,25 +39,34 @@ impl<'a> Op<'a> {
     Self { state }
   }
 
-  fn unary(&mut self, t: UnaryOperation) -> Result<(), Error> {
+  pub fn unary(&mut self, op: UnaryOperation) -> Result<(), Error> {
     let first = self.state.pop()?;
 
-    match t {
-      UnaryOperation::Drop => {}
+    match op {
+      UnaryOperation::Cr => {
+        self.state.push(first);
+        print!("\n");
+      },
       UnaryOperation::Dup => {
         self.state.push(first);
-        self.state.push(first);
-      }
+        self.state.push(first)
+      },
+      UnaryOperation::Dot => println!("{} ok", first),
+      UnaryOperation::Emit => println!("{} ok", match u32::try_from(first) {
+        Ok(v) => char::from_u32(v).unwrap(),
+        Err(_) => '',
+      }),
+      UnaryOperation::Drop => {},
     }
 
     Ok(())
   }
 
-  fn binary(&mut self, t: BinaryOperation) -> Result<(), Error> {
+  pub fn binary(&mut self, op: BinaryOperation) -> Result<(), Error> {
     let first = self.state.pop()?;
     let second = self.state.pop()?;
 
-    match t {
+    match op {
       BinaryOperation::Add => self.state.push(first + second),
       BinaryOperation::Sub => self.state.push(first - second),
       BinaryOperation::Mul => self.state.push(first * second),
@@ -64,12 +74,10 @@ impl<'a> Op<'a> {
         true => -1,
         false => 0,
       }),
-      BinaryOperation::Gt => {
-        self.state.push(match first < second {
-          true => -1,
-          false => 0,
-        });
-      }
+      BinaryOperation::Gt => self.state.push(match first < second {
+        true => -1,
+        false => 0,
+      }),
       BinaryOperation::Lt => self.state.push(match first > second {
         true => -1,
         false => 0,
@@ -77,74 +85,30 @@ impl<'a> Op<'a> {
       BinaryOperation::Swap => {
         self.state.push(first);
         self.state.push(second);
-      }
+      },
       BinaryOperation::Over => {
         self.state.push(second);
         self.state.push(first);
         self.state.push(second);
-      }
+      },
     }
 
     Ok(())
   }
 
-  fn ternary(&mut self, t: TernaryOperation) -> Result<(), Error> {
+  pub fn ternary(&mut self, op: TernaryOperation) -> Result<(), Error> {
     let first = self.state.pop()?;
     let second = self.state.pop()?;
     let third = self.state.pop()?;
 
-    match t {
+    match op {
       TernaryOperation::Rot => {
         self.state.push(second);
         self.state.push(first);
         self.state.push(third);
-      }
+      },
     }
 
     Ok(())
-  }
-
-  pub fn drop(&mut self) -> Result<(), Error> {
-    Ok(self.unary(UnaryOperation::Drop)?)
-  }
-
-  pub fn dup(&mut self) -> Result<(), Error> {
-    Ok(self.unary(UnaryOperation::Dup)?)
-  }
-
-  pub fn add(&mut self) -> Result<(), Error> {
-    Ok(self.binary(BinaryOperation::Add)?)
-  }
-
-  pub fn sub(&mut self) -> Result<(), Error> {
-    Ok(self.binary(BinaryOperation::Sub)?)
-  }
-
-  pub fn mul(&mut self) -> Result<(), Error> {
-    Ok(self.binary(BinaryOperation::Mul)?)
-  }
-
-  pub fn eq(&mut self) -> Result<(), Error> {
-    Ok(self.binary(BinaryOperation::Eq)?)
-  }
-
-  pub fn gt(&mut self) -> Result<(), Error> {
-    Ok(self.binary(BinaryOperation::Gt)?)
-  }
-
-  pub fn lt(&mut self) -> Result<(), Error> {
-    Ok(self.binary(BinaryOperation::Lt)?)
-  }
-
-  pub fn swap(&mut self) -> Result<(), Error> {
-    Ok(self.binary(BinaryOperation::Swap)?)
-  }
-
-  pub fn over(&mut self) -> Result<(), Error> {
-    Ok(self.binary(BinaryOperation::Over)?)
-  }
-
-  pub fn rot(&mut self) -> Result<(), Error> {
-    Ok(self.ternary(TernaryOperation::Rot)?)
   }
 }

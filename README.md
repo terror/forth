@@ -1,3 +1,3 @@
 ## forth
 
-`⠉⠕⠕⠇ a forth interpreter ⠉⠕⠕⠇`
+yet another forth interpreter

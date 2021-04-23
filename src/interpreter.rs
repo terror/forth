@@ -8,6 +8,8 @@ use crate::common::*;
 pub struct Interpreter {
   stack: Stack,
   tokens: Vec<String>,
+  variables: HashMap<String, String>,
+  ptr: i64,
 }
 
 impl Interpreter {
@@ -16,63 +18,83 @@ impl Interpreter {
   }
 
   pub fn parse(&mut self, input: String) {
-    self.tokens = input.split_whitespace().map(|s| s.to_string()).collect();
+    self.tokens = Utils::split(input);
+    self.reset();
+  }
+
+  pub fn get_next(&mut self) -> Result<String, Error> {
+    if self.has_next() {
+      let ret = self.tokens[self.ptr as usize].clone();
+      self.ptr += 1;
+      Ok(ret)
+    } else {
+      Err(Error::TokenOutOfBounds)
+    }
+  }
+
+  pub fn peek_next(&mut self) -> Result<String, Error> {
+    if self.has_next() {
+      let ret = self.tokens[self.ptr as usize].clone();
+      Ok(ret)
+    } else {
+      Err(Error::TokenOutOfBounds)
+    }
+  }
+
+  pub fn has_next(&mut self) -> bool {
+    self.ptr < (self.tokens.len() as i64)
+  }
+
+  pub fn reset(&mut self) {
+    self.ptr = 0;
   }
 
   pub fn exec(&mut self) -> Result<(), Error> {
-    for token in &self.tokens {
-      let is_num = |s: String| -> bool {
-        for c in s.chars() {
-          if !c.is_numeric() {
-            return false;
-          }
-        }
-        true
-      };
+    while self.has_next() {
+      let token = self.get_next()?;
 
-      if is_num(token.clone()) {
+      if Utils::is_num(&token) {
         self.stack.push(token.parse::<i64>().unwrap());
+        continue;
+      }
+
+      if let Some(val) = self.variables.get(&token) {
+        self.tokens.append(&mut Utils::split(val.to_string()));
         continue;
       }
 
       let mut op = Op::new(&mut self.stack);
 
       match token.as_str() {
-        "+" => op.add()?,
-        "-" => op.sub()?,
-        "*" => op.mul()?,
-        "=" => op.eq()?,
-        ">" => op.gt()?,
-        "<" => op.lt()?,
-        "swap" => op.swap()?,
-        "drop" => op.drop()?,
-        "dup" => op.dup()?,
-        "over" => op.over()?,
-        "rot" => op.rot()?,
-        "." => {
-          let val = match self.stack.pop() {
-            Ok(v) => v,
-            Err(_) => Err(Error::StackUnderflow)?,
-          };
-          println!("{} ok", val);
+        "dup" => op.unary(UnaryOperation::Dup)?,
+        "over" => op.binary(BinaryOperation::Over)?,
+        "emit" => op.unary(UnaryOperation::Emit)?,
+        "cr" => op.unary(UnaryOperation::Cr)?,
+        "drop" => op.unary(UnaryOperation::Drop)?,
+        "." => op.unary(UnaryOperation::Dot)?,
+        "+" => op.binary(BinaryOperation::Add)?,
+        "-" => op.binary(BinaryOperation::Sub)?,
+        "*" => op.binary(BinaryOperation::Mul)?,
+        "=" => op.binary(BinaryOperation::Eq)?,
+        ">" => op.binary(BinaryOperation::Gt)?,
+        "<" => op.binary(BinaryOperation::Lt)?,
+        "swap" => op.binary(BinaryOperation::Swap)?,
+        "rot" => op.ternary(TernaryOperation::Rot)?,
+        ";" => {}
+        ":" => {
+          let name = self.get_next()?;
+
+          let mut value = Vec::new();
+          while self.peek_next()? != ";" {
+            value.push(self.get_next()?);
+          }
+
+          self.variables.insert(name, value.join(" "));
         }
-        "emit" => {
-          let val = match self.stack.pop() {
-            Ok(v) => v,
-            Err(_) => Err(Error::StackUnderflow)?,
-          };
-
-          let ch = match u32::try_from(val) {
-            Ok(v) => char::from_u32(v).unwrap(),
-            Err(_) => '',
-          };
-
-          println!("{} ok", ch);
-        }
-
         _ => Err(Error::NotFound)?,
       }
     }
+
     Ok(())
   }
 
@@ -263,5 +285,56 @@ mod tests {
     interpreter.exec().unwrap();
     assert_eq!(interpreter.stack.size(), 2);
     assert_eq!(interpreter.stack.pop().unwrap(), 2);
+  }
+
+  #[test]
+  fn test_push_after_underflow() {
+    let mut interpreter = Interpreter::new();
+
+    let input = String::from("1 . .");
+    interpreter.parse(input);
+    let result = interpreter.exec();
+    assert!(result.is_err());
+
+    let input = String::from("1");
+    interpreter.parse(input);
+    interpreter.exec().unwrap();
+    assert_eq!(interpreter.stack.size(), 1);
+    assert_eq!(interpreter.stack.pop().unwrap(), 1);
+  }
+
+  #[test]
+  fn test_variable() {
+    let mut interpreter = Interpreter::new();
+
+    let input = String::from(": foo 100 ;");
+    interpreter.parse(input);
+    let result = interpreter.exec();
+    assert!(result.is_ok(), result.err().unwrap().to_string());
+
+    let input = String::from("foo");
+    interpreter.parse(input);
+    interpreter.exec().unwrap();
+
+    assert_eq!(interpreter.stack.size(), 1);
+    assert_eq!(interpreter.stack.pop().unwrap(), 100);
+  }
+
+  #[test]
+  fn test_multiple_variables() {
+    let mut interpreter = Interpreter::new();
+
+    let input = String::from(": foo 100 ; : bar 100 ;");
+    interpreter.parse(input);
+    let result = interpreter.exec();
+    assert!(result.is_ok(), result.err().unwrap().to_string());
+
+    let input = String::from("foo bar");
+    interpreter.parse(input);
+    interpreter.exec().unwrap();
+
+    assert_eq!(interpreter.stack.size(), 2);
+    assert_eq!(interpreter.stack.pop().unwrap(), 100);
+    assert_eq!(interpreter.stack.pop().unwrap(), 100);
   }
 }
