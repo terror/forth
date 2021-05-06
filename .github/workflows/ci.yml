@@ -1,0 +1,30 @@
+name: Rust
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    
+    - name: Install just
+      run: |
+        if ! which just; then
+          git clone https://github.com/casey/just
+          cd just
+          echo '1.51.0' > rust-toolchain
+          cargo install --path .
+        fi
+        
+    - name: ci
+      run: just all
