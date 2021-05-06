@@ -1,9 +1,5 @@
 use crate::common::*;
 
-/*───────────────────────────────────────────────────────────────────────────│─╗
-│ Interpreter                                                              ─╬─│┼
-╚────────────────────────────────────────────────────────────────────────────│*/
-
 #[derive(Debug, Default)]
 pub struct Interpreter {
   stack: Stack,
@@ -17,9 +13,10 @@ impl Interpreter {
     Self::default()
   }
 
-  pub fn parse(&mut self, input: String) {
+  pub fn parse(&mut self, input: String) -> &mut Self {
     self.tokens = Utils::split(input);
     self.reset();
+    self
   }
 
   pub fn get_next(&mut self) -> Result<String, Error> {
@@ -91,7 +88,7 @@ impl Interpreter {
 
           self.variables.insert(name, value.join(" "));
         }
-        _ => Err(Error::NotFound)?,
+        _ => return Err(Error::NotFound),
       }
     }
 
@@ -102,7 +99,7 @@ impl Interpreter {
     self
       .stack
       .contents()
-      .into_iter()
+      .iter()
       .map(|v| v.to_string())
       .collect::<Vec<String>>()
       .join(" ")
@@ -117,9 +114,8 @@ mod tests {
   #[test]
   fn test_push() {
     let mut interpreter = Interpreter::new();
-    let input = String::from("1");
-    interpreter.parse(input);
-    interpreter.exec().unwrap();
+
+    interpreter.parse("1".into()).exec().unwrap();
     assert_eq!(interpreter.stack.size(), 1);
     assert_eq!(interpreter.stack.pop().unwrap(), 1);
   }
@@ -127,9 +123,8 @@ mod tests {
   #[test]
   fn test_dot() {
     let mut interpreter = Interpreter::new();
-    let input = String::from("1 1 .");
-    interpreter.parse(input);
-    interpreter.exec().unwrap();
+
+    interpreter.parse("1 1 .".into()).exec().unwrap();
     assert_eq!(interpreter.stack.size(), 1);
     assert_eq!(interpreter.stack.pop().unwrap(), 1);
   }
@@ -137,14 +132,11 @@ mod tests {
   #[test]
   fn test_add() {
     let mut interpreter = Interpreter::new();
-    let input = String::from("1 1 1");
-    interpreter.parse(input);
-    interpreter.exec().unwrap();
+
+    interpreter.parse("1 1 1".into()).exec().unwrap();
     assert_eq!(interpreter.stack.size(), 3);
 
-    let input = String::from("+");
-    interpreter.parse(input);
-    interpreter.exec().unwrap();
+    interpreter.parse("+".into()).exec().unwrap();
     assert_eq!(interpreter.stack.size(), 2);
     assert_eq!(interpreter.stack.pop().unwrap(), 2);
   }
@@ -152,14 +144,11 @@ mod tests {
   #[test]
   fn test_sub() {
     let mut interpreter = Interpreter::new();
-    let input = String::from("1 1 1");
-    interpreter.parse(input);
-    interpreter.exec().unwrap();
+
+    interpreter.parse("1 1 1".into()).exec().unwrap();
     assert_eq!(interpreter.stack.size(), 3);
 
-    let input = String::from("-");
-    interpreter.parse(input);
-    interpreter.exec().unwrap();
+    interpreter.parse("-".into()).exec().unwrap();
     assert_eq!(interpreter.stack.size(), 2);
     assert_eq!(interpreter.stack.pop().unwrap(), 0);
   }
@@ -167,14 +156,11 @@ mod tests {
   #[test]
   fn test_mul() {
     let mut interpreter = Interpreter::new();
-    let input = String::from("1 1 1");
-    interpreter.parse(input);
-    interpreter.exec().unwrap();
+
+    interpreter.parse("1 1 1".into()).exec().unwrap();
     assert_eq!(interpreter.stack.size(), 3);
 
-    let input = String::from("*");
-    interpreter.parse(input);
-    interpreter.exec().unwrap();
+    interpreter.parse("*".into()).exec().unwrap();
     assert_eq!(interpreter.stack.size(), 2);
     assert_eq!(interpreter.stack.pop().unwrap(), 1);
   }
@@ -183,15 +169,11 @@ mod tests {
   fn test_eq() {
     let mut interpreter = Interpreter::new();
 
-    let input = String::from("1 1 =");
-    interpreter.parse(input);
-    interpreter.exec().unwrap();
+    interpreter.parse("1 1 =".into()).exec().unwrap();
     assert_eq!(interpreter.stack.size(), 1);
     assert_eq!(interpreter.stack.pop().unwrap(), -1);
 
-    let input = String::from("1 2 =");
-    interpreter.parse(input);
-    interpreter.exec().unwrap();
+    interpreter.parse("1 2 =".into()).exec().unwrap();
     assert_eq!(interpreter.stack.size(), 1);
     assert_eq!(interpreter.stack.pop().unwrap(), 0);
   }
@@ -200,15 +182,11 @@ mod tests {
   fn test_gt() {
     let mut interpreter = Interpreter::new();
 
-    let input = String::from("1 2 >");
-    interpreter.parse(input);
-    interpreter.exec().unwrap();
+    interpreter.parse("1 2 >".into()).exec().unwrap();
     assert_eq!(interpreter.stack.size(), 1);
     assert_eq!(interpreter.stack.pop().unwrap(), 0);
 
-    let input = String::from("2 1 >");
-    interpreter.parse(input);
-    interpreter.exec().unwrap();
+    interpreter.parse("2 1 >".into()).exec().unwrap();
     assert_eq!(interpreter.stack.size(), 1);
     assert_eq!(interpreter.stack.pop().unwrap(), -1);
   }
@@ -217,15 +195,11 @@ mod tests {
   fn test_lt() {
     let mut interpreter = Interpreter::new();
 
-    let input = String::from("2 1 <");
-    interpreter.parse(input);
-    interpreter.exec().unwrap();
+    interpreter.parse("2 1 <".into()).exec().unwrap();
     assert_eq!(interpreter.stack.size(), 1);
     assert_eq!(interpreter.stack.pop().unwrap(), 0);
 
-    let input = String::from("1 2 <");
-    interpreter.parse(input);
-    interpreter.exec().unwrap();
+    interpreter.parse("1 2 <".into()).exec().unwrap();
     assert_eq!(interpreter.stack.size(), 1);
     assert_eq!(interpreter.stack.pop().unwrap(), -1);
   }
@@ -234,9 +208,7 @@ mod tests {
   fn test_swap() {
     let mut interpreter = Interpreter::new();
 
-    let input = String::from("2 1 swap");
-    interpreter.parse(input);
-    interpreter.exec().unwrap();
+    interpreter.parse("2 1 swap".into()).exec().unwrap();
     assert_eq!(interpreter.stack.size(), 2);
     assert_eq!(interpreter.stack.pop().unwrap(), 2);
   }
@@ -245,9 +217,7 @@ mod tests {
   fn test_rot() {
     let mut interpreter = Interpreter::new();
 
-    let input = String::from("1 2 3 rot");
-    interpreter.parse(input);
-    interpreter.exec().unwrap();
+    interpreter.parse("1 2 3 rot".into()).exec().unwrap();
     assert_eq!(interpreter.stack.size(), 3);
     assert_eq!(interpreter.stack.pop().unwrap(), 1);
     assert_eq!(interpreter.stack.pop().unwrap(), 3);
@@ -258,9 +228,7 @@ mod tests {
   fn test_dup() {
     let mut interpreter = Interpreter::new();
 
-    let input = String::from("1 2 3 dup");
-    interpreter.parse(input);
-    interpreter.exec().unwrap();
+    interpreter.parse("1 2 3 dup".into()).exec().unwrap();
     assert_eq!(interpreter.stack.size(), 4);
     assert_eq!(interpreter.stack.pop().unwrap(), 3);
   }
@@ -269,9 +237,7 @@ mod tests {
   fn test_over() {
     let mut interpreter = Interpreter::new();
 
-    let input = String::from("1 2 3 over");
-    interpreter.parse(input);
-    interpreter.exec().unwrap();
+    interpreter.parse("1 2 3 over".into()).exec().unwrap();
     assert_eq!(interpreter.stack.size(), 4);
     assert_eq!(interpreter.stack.pop().unwrap(), 2);
   }
@@ -280,9 +246,7 @@ mod tests {
   fn test_drop() {
     let mut interpreter = Interpreter::new();
 
-    let input = String::from("1 2 3 drop");
-    interpreter.parse(input);
-    interpreter.exec().unwrap();
+    interpreter.parse("1 2 3 drop".into()).exec().unwrap();
     assert_eq!(interpreter.stack.size(), 2);
     assert_eq!(interpreter.stack.pop().unwrap(), 2);
   }
@@ -291,14 +255,10 @@ mod tests {
   fn test_push_after_underflow() {
     let mut interpreter = Interpreter::new();
 
-    let input = String::from("1 . .");
-    interpreter.parse(input);
-    let result = interpreter.exec();
+    let result = interpreter.parse("1 . .".into()).exec();
     assert!(result.is_err());
 
-    let input = String::from("1");
-    interpreter.parse(input);
-    interpreter.exec().unwrap();
+    interpreter.parse("1".into()).exec().unwrap();
     assert_eq!(interpreter.stack.size(), 1);
     assert_eq!(interpreter.stack.pop().unwrap(), 1);
   }
@@ -307,15 +267,10 @@ mod tests {
   fn test_variable() {
     let mut interpreter = Interpreter::new();
 
-    let input = String::from(": foo 100 ;");
-    interpreter.parse(input);
-    let result = interpreter.exec();
+    let result = interpreter.parse(": foo 100 ;".into()).exec();
     assert!(result.is_ok(), result.err().unwrap().to_string());
 
-    let input = String::from("foo");
-    interpreter.parse(input);
-    interpreter.exec().unwrap();
-
+    interpreter.parse("foo".into()).exec().unwrap();
     assert_eq!(interpreter.stack.size(), 1);
     assert_eq!(interpreter.stack.pop().unwrap(), 100);
   }
@@ -324,15 +279,10 @@ mod tests {
   fn test_multiple_variables() {
     let mut interpreter = Interpreter::new();
 
-    let input = String::from(": foo 100 ; : bar 100 ;");
-    interpreter.parse(input);
-    let result = interpreter.exec();
+    let result = interpreter.parse(": foo 100 ; : bar 100 ;".into()).exec();
     assert!(result.is_ok(), result.err().unwrap().to_string());
 
-    let input = String::from("foo bar");
-    interpreter.parse(input);
-    interpreter.exec().unwrap();
-
+    interpreter.parse("foo bar".into()).exec().unwrap();
     assert_eq!(interpreter.stack.size(), 2);
     assert_eq!(interpreter.stack.pop().unwrap(), 100);
     assert_eq!(interpreter.stack.pop().unwrap(), 100);

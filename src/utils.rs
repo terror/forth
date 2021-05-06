@@ -27,8 +27,9 @@ mod tests {
 
   #[test]
   fn test_split() {
-    assert_eq!(Utils::split(String::from(": foo 1 ;")), vec![
-      ":", "foo", "1", ";"
-    ]);
+    assert_eq!(
+      Utils::split(String::from(": foo 1 ;")),
+      vec![":", "foo", "1", ";"]
+    );
   }
 }

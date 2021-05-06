@@ -15,31 +15,32 @@ struct Opt {
   input: Option<PathBuf>,
 }
 
-/*───────────────────────────────────────────────────────────────────────────│─╗
-│ ⠉⠕⠕⠇ Forth ⠉⠕⠕⠇                                                          ─╬─│┼
-╚────────────────────────────────────────────────────────────────────────────│*/
+fn clear() {
+  // clear terminal screen
+  print!("{esc}c", esc = 27 as char);
+}
 
 fn main() {
   if let Some(input) = Opt::from_args().input {
     println!("Input! {}", input.display());
   } else {
-    println!("⠉⠕⠕⠇ Forth ⠉⠕⠕⠇");
-
     let mut interpreter = Interpreter::new();
 
+    clear();
+
     loop {
-      print!("{}\n> ", interpreter.contents());
+      println!("⠉⠕⠕⠇ Forth ⠉⠕⠕⠇");
+
+      println!("{}", interpreter.contents());
 
       let mut i = String::new();
-      stdout().flush().expect("Coult not flush stdout.");
-      stdin()
-        .read_line(&mut i)
-        .expect("Could not read from stdin.");
 
-      interpreter.parse(i);
-      match interpreter.exec() {
+      stdin().read_line(&mut i).unwrap();
+      clear();
+
+      match interpreter.parse(i).exec() {
         Ok(_) => {}
-        Err(e) => println!("{}", e),
+        Err(e) => println!("Error: {}", e),
       };
     }
   }

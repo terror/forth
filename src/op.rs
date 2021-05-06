@@ -1,9 +1,5 @@
 use crate::common::*;
 
-/*───────────────────────────────────────────────────────────────────────────│─╗
-│ Operation Types                                                          ─╬─│┼
-╚────────────────────────────────────────────────────────────────────────────│*/
-
 pub enum UnaryOperation {
   Drop,
   Dup,
@@ -25,10 +21,6 @@ pub enum TernaryOperation {
   Rot,
 }
 
-/*───────────────────────────────────────────────────────────────────────────│─╗
-│ Op                                                                       ─╬─│┼
-╚────────────────────────────────────────────────────────────────────────────│*/
-
 #[derive(Debug)]
 pub struct Op<'a> {
   state: &'a mut Stack,
@@ -45,18 +37,21 @@ impl<'a> Op<'a> {
     match op {
       UnaryOperation::Cr => {
         self.state.push(first);
-        print!("\n");
-      },
+        println!();
+      }
       UnaryOperation::Dup => {
         self.state.push(first);
         self.state.push(first)
-      },
+      }
       UnaryOperation::Dot => println!("{} ok", first),
-      UnaryOperation::Emit => println!("{} ok", match u32::try_from(first) {
-        Ok(v) => char::from_u32(v).unwrap(),
-        Err(_) => '',
-      }),
-      UnaryOperation::Drop => {},
+      UnaryOperation::Emit => println!(
+        "{} ok",
+        match u32::try_from(first) {
+          Ok(v) => char::from_u32(v).unwrap(),
+          Err(_) => '',
+        }
+      ),
+      UnaryOperation::Drop => {}
     }
 
     Ok(())
@@ -85,12 +80,12 @@ impl<'a> Op<'a> {
       BinaryOperation::Swap => {
         self.state.push(first);
         self.state.push(second);
-      },
+      }
       BinaryOperation::Over => {
         self.state.push(second);
         self.state.push(first);
         self.state.push(second);
-      },
+      }
     }
 
     Ok(())
@@ -106,7 +101,7 @@ impl<'a> Op<'a> {
         self.state.push(second);
         self.state.push(first);
         self.state.push(third);
-      },
+      }
     }
 
     Ok(())
